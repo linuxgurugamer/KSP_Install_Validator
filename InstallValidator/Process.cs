@@ -33,7 +33,7 @@ namespace InstallValidator
             if (data == null)
             {
                 ParseError = true;
-                AddParseErrorMsg = "[InstallValidator] Error in Json.Deserialize, file: " + fname;
+                AddParseErrorMsg = "[InstallValidator] Bad .version file!, " + fname+ " is invalid";
                 Log.Error("[InstallValidator] Error in Json.Deserialize, file: " + fname);
                 return false;
             }
@@ -101,13 +101,10 @@ namespace InstallValidator
         /// <returns></returns>
         string ProcessMessage(string fieldName, InstallLocInfo ili, string stanza, string defaultMsg)
         {
-            if (ili.Message == null || ili.Message == "")
-                return defaultMsg;
-
-            if (ili.Name == null)
-                ili.Name = ModName;
-            string msg = ili.Message;
-
+            string msg;
+            if (string.IsNullOrEmpty(ili.Message)) msg = defaultMsg;
+            else msg = ili.Message;
+            if (ili.Name == null) ili.Name = ModName;
             msg = msg.Replace("<MODNAME>", ili.Name);
             msg = msg.Replace("<FILE>", ili.FileName);
             msg = msg.Replace("<DIRECTORY>", ili.Directory);
