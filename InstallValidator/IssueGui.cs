@@ -1,5 +1,4 @@
-﻿
-// 
+﻿// 
 //     Copyright (C) 2014 CYBUTEK
 // 
 //     This program is free software: you can redistribute it and/or modify
@@ -16,17 +15,20 @@
 //     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // 
 
+// This file is based on the IssueGui.cs file from the KSP-AVC mod
+
 #region Using Directives
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 #endregion
 
 namespace InstallValidator
 {
+    /// <summary>
+    /// This class displays a small dialog showing all issues found
+    /// </summary>
     public class IssueGui : MonoBehaviour
     {
         #region Fields        
@@ -34,13 +36,9 @@ namespace InstallValidator
         private GUIStyle boxStyle;
         private GUIStyle buttonStyle;
         private bool hasCentred;
-        private GUIStyle labelStyle;
         private GUIStyle messageStyle;
-        private GUIStyle nameLabelStyle;
         private GUIStyle nameTitleStyle;
         private Rect position = new Rect(Screen.width, Screen.height,0, 0);
-        private GUIStyle titleStyle;
-        //private bool isInitialised = false;
 
 
         #endregion
@@ -60,6 +58,9 @@ namespace InstallValidator
             Log.Info("IssueGui was created.");
         }
 
+        /// <summary>
+        /// Standard OnGUI method to control the window
+        /// </summary>
         protected void OnGUI()
         {
             try
@@ -99,29 +100,22 @@ namespace InstallValidator
             this.hasCentred = true;
         }
 
-
-
-        
-        private void DrawCompatibilityIssues()
+        /// <summary>
+        /// Draw the window shoing the issues
+        /// </summary>
+        private void DrawInstallationIssues()
         {
             GUILayout.BeginVertical(this.boxStyle);
             GUILayout.Label("INSTALLATION ISSUES", this.nameTitleStyle);
             foreach (var error in Process.parseErrorMsgs)
             {
-                Log.Error("IssueGui, message: " + error);
                 GUILayout.Label(error, messageStyle, GUILayout.MinWidth(575.0f));
             }
             GUILayout.EndVertical();
         }
 
-
-
         private void InitialiseStyles()
         {
-            //if (Configuration.UseKspSkin)
-            //{
-            //    GUI.skin = HighLogic.Skin;
-            //}
             this.boxStyle = new GUIStyle(HighLogic.Skin.box)
             {
                 padding = new RectOffset(10, 10, 5, 5)
@@ -138,29 +132,6 @@ namespace InstallValidator
                 stretchWidth = true
             };
 
-            this.titleStyle = new GUIStyle(HighLogic.Skin.label)
-            {
-                normal =
-                {
-                    textColor = Color.white
-                },
-                alignment = TextAnchor.MiddleCenter,
-                fontStyle = FontStyle.Bold
-            };
-
-            this.nameLabelStyle = new GUIStyle(HighLogic.Skin.label)
-            {
-                fixedHeight = 25.0f,
-                alignment = TextAnchor.MiddleLeft,
-                stretchWidth = true
-            };
-
-            this.labelStyle = new GUIStyle(HighLogic.Skin.label)
-            {
-                fixedHeight = 25.0f,
-                alignment = TextAnchor.MiddleCenter,
-            };
-
             this.messageStyle = new GUIStyle(HighLogic.Skin.label)
             {
                 stretchWidth = true
@@ -173,17 +144,19 @@ namespace InstallValidator
                     textColor = Color.white
                 }
             };
-
-            //isInitialised = true;
         }
 
+        /// <summary>
+        /// Display the window, destroys itself when done
+        /// </summary>
+        /// <param name="id"></param>
         private void Window(int id)
         {
             try
             {
                 if (Process.parseErrorMsgs != null && Process.parseErrorMsgs.Count > 0)
                 {
-                    this.DrawCompatibilityIssues();
+                    this.DrawInstallationIssues();
                 }
                 if (GUILayout.Button("CLOSE", this.buttonStyle))
                 {
@@ -197,6 +170,6 @@ namespace InstallValidator
             }
         }
 
-        #endregion
+#endregion
     }
 }

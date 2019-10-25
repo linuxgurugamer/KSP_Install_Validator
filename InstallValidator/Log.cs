@@ -1,7 +1,10 @@
 ﻿
+#region Using Directives
+
 using System;
-using System.Collections;
 using System.Diagnostics;
+
+#endregion
 
 namespace InstallValidator
 {

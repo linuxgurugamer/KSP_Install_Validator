@@ -1,82 +1,34 @@
-﻿using System;
+﻿
+#region Using Directives
+
 using System.IO;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
+
+#endregion
 
 namespace InstallValidator
 {
-    public class InstallLocInfo
-    {
-        public string Name = null;
-        public string FileName = null;
-        public string Directory = null;
-        public string Path = null;
-        public string Message = null;
-
-        public InstallLocInfo(object obj)
-        {
-            this.ParseJson(obj);
-        }
-
-        private void ParseJson( object obj)
-        {
-            var data = obj as Dictionary<string, object>;
-            if (data == null)
-            {
-                Process.ParseError = true;
-                Process.AddParseErrorMsg = "[InstallValidator] No data in dictionary (ParseJson)";
-                Log.Error("No data in dictionary (ParseJson)");
-                throw new ArgumentException("[InstallValidator] No data in dictionary (ParseJson)");
-            }
-
-            foreach (var key in data.Keys)
-            {
-                switch (key)
-                {
-                    case "NAME":
-                        this.Name =(string)data[key];
-                        Log.Info("NAME: " + Name);
-                        break;
-
-                    case "FILE":
-                        this.FileName = (string)data[key];
-                        Log.Info("FILE: " + FileName);
-                        break;
-
-                    case "DIRECTORY":
-                        this.Directory = (string)data[key];
-                        Log.Info("DIRECTORY: " + Directory);
-                        break;
-                    case "PATH":
-                        this.Path = (string)data[key];
-                        Log.Info("PATH: " + Path);
-                        break;
-
-                    case "MESSAGE":
-                        this.Message = (string)data[key];
-                        Log.Info("MESSAGE: " + Message);
-                        break;
-                }
-            }
-        }
-    }
-
     [KSPAddon(KSPAddon.Startup.MainMenu, true)]
     public class Process: MonoBehaviour
     {
         internal static List<string> parseErrorMsgs = new List<string>();
-
-        //List<InstallLocInfo> installLocInfoList = new List<InstallLocInfo>();
+        
         public static bool ParseError { get; set; }
         public static string AddParseErrorMsg { set { parseErrorMsgs.Add(value); } }
 
         string ModName = "";    // This comes from the main NAME in the .version file
 
+        const string DefaultMsg = "<MODNAME> has been installed incorrectly and will not function properly. All files should be located in: <KSP install directory>/GameData/<PATH>/<DIRECTORY>. Do not move any files from inside that folder.";
+
+        /// <summary>
+        /// Process a single .version file
+        /// </summary>
+        /// <param name="fname"></param>
+        /// <returns></returns>
         bool DoProcess(string fname)
         {
-            string json = File.ReadAllText("GameData/" + fname);
+            string json = File.ReadAllText(fname);
             var data = Json.Deserialize(json) as Dictionary<string, object>;
             if (data == null)
             {
@@ -95,21 +47,24 @@ namespace InstallValidator
                 if (key == "INSTALL_LOC" || key.StartsWith("INSTALL_LOC_"))
                 {
                     var installLocInfo = new InstallLocInfo(data[key]);
-                    //installLocInfoList.Add(installLocInfo);
                     ValidateInstallLoc(key, installLocInfo);
                 }
             }
             return true;
         }
 
+        /// <summary>
+        /// Validate that the specified path, directory & file exist
+        /// </summary>
+        /// <param name="stanza"></param>
+        /// <param name="ili"></param>
         void ValidateInstallLoc(string stanza, InstallLocInfo ili)
         {
             string fullPath = "GameData/" + ili.Path;
              if (ili.Path != null && !Directory.Exists(fullPath))
             {
                 ParseError = true;
-                AddParseErrorMsg = ProcessMessage("Path", ili, stanza,
-                                        "<MODNAME> has been installed incorrectly and will not function properly. All files should be located in KSP/GameData/<PATH>/<DIRECTORY>. Do not move any files from inside that folder.");
+                AddParseErrorMsg = ProcessMessage("Path", ili, stanza, DefaultMsg);
 
                 Log.Error("Missing path: " + ili.Path);
                 return;
@@ -120,8 +75,7 @@ namespace InstallValidator
             if (ili.Directory != null && !Directory.Exists(fullPath))
             {
                 ParseError = true;
-                AddParseErrorMsg = ProcessMessage("Directory", ili, stanza,
-                                        "<MODNAME> has been installed incorrectly and will not function properly. All files should be located in KSP/GameData/<PATH>/<DIRECTORY>. Do not move any files from inside that folder.");
+                AddParseErrorMsg = ProcessMessage("Directory", ili, stanza, DefaultMsg);
 
                 Log.Error("Missing directory: " + ili.Directory);
                 return;
@@ -131,14 +85,20 @@ namespace InstallValidator
             if (!File.Exists(fullPath))
             {
                 ParseError = true;
-
-                AddParseErrorMsg = ProcessMessage("File", ili, stanza,
-                     "<MODNAME> has been installed incorrectly and will not function properly. All files should be located in KSP/GameData/<PATH>/<DIRECTORY>. Do not move any files from inside that folder.");
+                AddParseErrorMsg = ProcessMessage("File", ili, stanza, DefaultMsg);
                 Log.Error("Missing file: " + ili.FileName);
                 return;
             }
         }
 
+        /// <summary>
+        /// This processes the message provided in the .version file, doing substitutions as needed
+        /// </summary>
+        /// <param name="fieldName"></param>
+        /// <param name="ili"></param>
+        /// <param name="stanza"></param>
+        /// <param name="defaultMsg"></param>
+        /// <returns></returns>
         string ProcessMessage(string fieldName, InstallLocInfo ili, string stanza, string defaultMsg)
         {
             if (ili.Message == null || ili.Message == "")
@@ -158,10 +118,24 @@ namespace InstallValidator
             return msg;
         }
 
+        /// <summary>
+        /// Scan all version files, process each one
+        /// </summary>
+        void ScanVersionFiles()
+        {
+            var files = System.IO.Directory.GetFiles(KSPUtil.ApplicationRootPath + "GameData/", "*.version", SearchOption.AllDirectories);
+            foreach (var f in files)
+            {
+                f.Replace('\\', '/');
+                Log.Info("file: " + f);
+                DoProcess(f);
+            }
+        }
+
         public void Start()
         {
-            Log.Info("[InstallValidator] Start");
-            DoProcess("InstallValidator/test.version");
+            Log.Info("Start, searching: " + KSPUtil.ApplicationRootPath + "GameData/");
+            ScanVersionFiles();
             if (ParseError)
             {
                 gameObject.AddComponent<IssueGui>();
