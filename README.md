@@ -1,5 +1,7 @@
 InstallValidator
 
+This has been incorporated into the MADLAD mod
+
 JSON stanza(s) located in the .version file.
 
 	"INSTALL_LOC":
