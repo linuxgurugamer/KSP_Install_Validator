@@ -80,14 +80,17 @@ namespace InstallValidator
                 Log.Error("Missing directory: " + ili.Directory);
                 return;
             }
-            fullPath += "/" + ili.FileName;           
-            fullPath.Replace("//", "/");
-            if (!File.Exists(fullPath))
+            if (ili.FileName != "")
             {
-                ParseError = true;
-                AddParseErrorMsg = ProcessMessage("File", ili, stanza, DefaultMsg);
-                Log.Error("Missing file: " + ili.FileName);
-                return;
+                fullPath += "/" + ili.FileName;           
+                fullPath.Replace("//", "/");
+                if (!File.Exists(fullPath))
+                {
+                    ParseError = true;
+                    AddParseErrorMsg = ProcessMessage("File", ili, stanza, DefaultMsg);
+                    Log.Error("Missing file: " + ili.FileName);
+                    return;
+                }
             }
         }
 
