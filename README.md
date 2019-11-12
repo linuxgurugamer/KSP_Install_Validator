@@ -6,10 +6,10 @@ JSON stanza(s) located in the .version file.
 
 	"INSTALL_LOC":
 	{
-		"NAME":			"modname",		// optional
+		"NAME":		"modname",		// optional
 		"PATH":         "path",
 		"DIRECTORY":    "dirName",
-		"FILE":         "fileName",		
+		"FILE":         "fileName",		// optional, if not specified, will only check the directory	
 		"MESSAGE":      "message to display"
 	}
 
@@ -18,7 +18,7 @@ suffix can be anything you want. It would look like this:
 
 	"INSTALL_LOC_1":
 	{
-		"NAME":			"modname",		// optional
+		"NAME":		"modname",
 		"PATH":         "path",
 		"DIRECTORY":    "dirName",
 		"FILE":         "fileName",
